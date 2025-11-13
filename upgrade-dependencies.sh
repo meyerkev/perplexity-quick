@@ -1,9 +1,9 @@
 #!/bin/bash
 set -e
 
-# Get current date in YYYY-MM-DD format
-DATE=$(date +%Y-%m-%d)
-BRANCH_NAME="dependency-upgrade-${DATE}"
+# Get current timestamp down to the second
+TIMESTAMP=$(date +%Y-%m-%d-%H-%M-%S)
+BRANCH_NAME="dependency-upgrade-${TIMESTAMP}"
 
 echo "Creating branch: ${BRANCH_NAME}"
 
@@ -37,7 +37,7 @@ git push -u origin "${BRANCH_NAME}"
 echo "Creating pull request..."
 
 # Create pull request using GitHub CLI
-gh pr create --title "Upgrade dependencies (${DATE})" --body "Automated dependency upgrade from requirements.base.txt" || {
+gh pr create --title "Upgrade dependencies (${TIMESTAMP})" --body "Automated dependency upgrade from requirements.base.txt" || {
     echo "Failed to create PR. You may need to install GitHub CLI (gh) or authenticate."
     echo "Branch pushed successfully. Create PR manually at: https://github.com/$(git config --get remote.origin.url | sed 's/.*github.com[:/]\(.*\)\.git/\1/')/compare/${BRANCH_NAME}"
     exit 1
