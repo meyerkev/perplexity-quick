@@ -1,0 +1,57 @@
+name: Upgrade Dependencies
+
+on:
+  workflow_dispatch:
+
+jobs:
+  upgrade:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      
+      - name: Create virtual environment
+        run: make venv
+      
+      - name: Upgrade dependencies
+        run: make upgrade
+      
+      - name: Create branch and commit changes
+        id: create-branch
+        run: |
+          TIMESTAMP=$(date +%Y-%m-%d-%H-%M-%S)
+          BRANCH_NAME="dependency-upgrade-${TIMESTAMP}"
+          echo "BRANCH_NAME=${BRANCH_NAME}" >> $GITHUB_OUTPUT
+          git checkout -b "${BRANCH_NAME}"
+          if git diff --quiet requirements.txt; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+            git config --local user.email "action@github.com"
+            git config --local user.name "GitHub Action"
+            git add requirements.txt
+            git commit -m "Upgrade dependencies to latest versions"
+            git push -u origin "${BRANCH_NAME}"
+          fi
+      
+      - name: Create Pull Request
+        if: steps.create-branch.outputs.changed == 'true'
+        run: |
+          gh pr create \
+            --title "Upgrade dependencies (${{ steps.create-branch.outputs.BRANCH_NAME }})" \
+            --body "Automated dependency upgrade from requirements.base.txt" \
+            --base main \
+            --head "${{ steps.create-branch.outputs.BRANCH_NAME }}"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
