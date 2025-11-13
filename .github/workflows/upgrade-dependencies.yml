@@ -20,38 +20,13 @@ jobs:
         with:
           python-version: '3.13'
       
-      - name: Create virtual environment
-        run: make venv
-      
-      - name: Upgrade dependencies
-        run: make upgrade
-      
-      - name: Create branch and commit changes
-        id: create-branch
+      - name: Configure Git
         run: |
-          TIMESTAMP=$(date +%Y-%m-%d-%H-%M-%S)
-          BRANCH_NAME="dependency-upgrade-${TIMESTAMP}"
-          echo "BRANCH_NAME=${BRANCH_NAME}" >> $GITHUB_OUTPUT
-          git checkout -b "${BRANCH_NAME}"
-          if git diff --quiet requirements.txt; then
-            echo "changed=false" >> $GITHUB_OUTPUT
-          else
-            echo "changed=true" >> $GITHUB_OUTPUT
-            git config --local user.email "action@github.com"
-            git config --local user.name "GitHub Action"
-            git add requirements.txt
-            git commit -m "Upgrade dependencies to latest versions"
-            git push -u origin "${BRANCH_NAME}"
-          fi
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
       
-      - name: Create Pull Request
-        if: steps.create-branch.outputs.changed == 'true'
-        run: |
-          gh pr create \
-            --title "Upgrade dependencies (${{ steps.create-branch.outputs.BRANCH_NAME }})" \
-            --body "Automated dependency upgrade from requirements.base.txt" \
-            --base main \
-            --head "${{ steps.create-branch.outputs.BRANCH_NAME }}"
+      - name: Run upgrade script
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./upgrade-dependencies.sh
 
