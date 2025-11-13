@@ -12,7 +12,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: main
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.PAT_TOKEN }}
           fetch-depth: 0
       
       - name: Set up Python
@@ -27,6 +27,6 @@ jobs:
       
       - name: Run upgrade script
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
         run: ./upgrade-dependencies.sh
 
